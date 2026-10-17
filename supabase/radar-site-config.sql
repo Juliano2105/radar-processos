@@ -54,3 +54,19 @@ begin
       from (select * from rp_alertas where cadastro_id = v_id order by criado_em desc, id desc limit 500) a
   ), '[]'::jsonb);
 end $$;
+
+-- monitorados grandes (empresas com centenas de processos)
+create or replace function public.rp_site_salvar_monitorado(p_sessao text, p_doc text, p_dados jsonb)
+returns boolean language plpgsql security definer set search_path = public, extensions as $$
+declare v_id uuid := rp_sessao_id(p_sessao); v_doc text := regexp_replace(coalesce(p_doc, ''), '\D', '', 'g');
+begin
+  if v_doc !~ '^[0-9]{11}$|^[0-9]{14}$' then raise exception 'Documento inválido.'; end if;
+  if pg_column_size(p_dados) > 3000000 then raise exception 'Dados grandes demais.'; end if;
+  if not exists (select 1 from rp_monitorados where cadastro_id = v_id and doc = v_doc)
+     and (select count(*) from rp_monitorados where cadastro_id = v_id) >= 50 then
+    raise exception 'Limite de 50 documentos monitorados.';
+  end if;
+  insert into rp_monitorados (cadastro_id, doc, dados) values (v_id, v_doc, coalesce(p_dados, '{}'::jsonb))
+  on conflict (cadastro_id, doc) do update set dados = excluded.dados, atualizado_em = now();
+  return true;
+end $$;

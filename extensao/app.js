@@ -494,7 +494,12 @@ $('#btnMonitorar').addEventListener('click', async () => {
   };
   const mm = monitorados[a.doc];
   mm.totalProcessos = new Set([...mm.vistos, ...mm.processos.map((p) => p.numero)]).size;
-  await chrome.storage.local.set({ monitorados });
+  try {
+    await chrome.storage.local.set({ monitorados });
+  } catch (e) {
+    alert(`Não foi possível monitorar: ${e.message || e}`);
+    return;
+  }
   $('#btnMonitorar').textContent = 'Monitorando ✓';
   setTimeout(() => ($('#btnMonitorar').textContent = 'Monitorar este documento'), 2500);
 });
@@ -666,7 +671,7 @@ $('#formCadastro').addEventListener('submit', async (e) => {
   const erro = $('#cadErro');
   erro.hidden = true;
   $('#cadBtn').disabled = true;
-  $('#cadBtn').textContent = 'Cadastrando…';
+  $('#cadBtn').textContent = $('#cadBtn').dataset.ocupado || 'Cadastrando…';
   try {
     await Conta.cadastrar($('#cadNome').value, $('#cadTel').value);
     $('#telaCadastro').hidden = true;
@@ -677,7 +682,7 @@ $('#formCadastro').addEventListener('submit', async (e) => {
     erro.hidden = false;
   } finally {
     $('#cadBtn').disabled = false;
-    $('#cadBtn').textContent = 'Começar';
+    $('#cadBtn').textContent = $('#cadBtn').dataset.texto || 'Começar';
   }
 });
 async function renderConta() {

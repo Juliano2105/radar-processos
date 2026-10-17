@@ -2,12 +2,13 @@
 
 _Última atualização: 17 de outubro de 2026_
 
-O **Radar de Processos** é uma extensão do Chrome que consulta, em fontes públicas, processos judiciais e sanções ligados a um CNPJ ou CPF digitado por você, e pode monitorar esses documentos e avisar quando surgir algo novo.
+O **Radar de Processos** é uma extensão do Chrome e um site (juliano2105.github.io/radar-processos/app) que consultam, em fontes públicas, processos judiciais e sanções ligados a um CNPJ ou CPF digitado por você, e podem monitorar esses documentos e avisar quando surgir algo novo.
 
 ## Resumo
 
 - **Cadastro:** para usar, você informa **nome e telefone**. Só isso (mais a data do último uso e a versão da extensão) é guardado no nosso banco de dados, para sabermos quem usa a ferramenta.
-- **As consultas não passam por nós.** Elas saem do seu navegador direto para as fontes oficiais listadas abaixo. Os CPFs/CNPJs consultados, os processos encontrados, os monitorados e os alertas ficam **somente no seu Chrome** — nem o administrador nem outros usuários conseguem vê-los.
+- **Na extensão, as consultas não passam por nós.** Elas saem do seu navegador direto para as fontes oficiais listadas abaixo. Os CPFs/CNPJs consultados, os processos encontrados, os monitorados e os alertas ficam **somente no seu Chrome**.
+- **No site**, as consultas passam pelo nosso servidor em São Paulo (o Diário Nacional só aceita conexões do Brasil) e não são gravadas. Os documentos que você escolhe **monitorar** e os **alertas** ficam no nosso banco, presos à sua conta: só quem entra com o seu telefone e a sua senha vê esses dados. **Nenhum outro usuário consegue ver o que você consulta ou monitora**, e o painel do administrador mostra só nome, telefone e a quantidade de monitorados.
 - **Não vendemos nem compartilhamos dados.** Não há rastreadores, analytics nem anúncios.
 
 ## Cadastro
@@ -16,6 +17,8 @@ O **Radar de Processos** é uma extensão do Chrome que consulta, em fontes púb
 |---|---|---|
 | Nome e telefone | Identificar quem usa a ferramenta e poder entrar em contato | Banco de dados do Radar (Supabase, região São Paulo), visível só para o administrador |
 | Data do último uso e versão da extensão | Saber se a ferramenta está sendo usada e atualizada | Mesmo banco |
+| Senha (só no site) | Entrar na sua conta | Mesmo banco, guardada só como hash bcrypt (ninguém consegue lê-la) |
+| Documentos monitorados, processos já vistos, alertas e configurações (só no site) | Verificar sozinho e avisar você | Mesmo banco, presos à sua conta; apagados quando você para de monitorar ou exclui o cadastro |
 
 Você pode pedir a exclusão do seu cadastro a qualquer momento pelo contato abaixo.
 
@@ -28,7 +31,8 @@ Você pode pedir a exclusão do seu cadastro a qualquer momento pelo contato aba
 | e-SAJ (TJSP, TJMS, TJAL, TJCE, TJAM, TJAC) | CPF/CNPJ | Consulta pública de processos |
 | Portal da Transparência (api.portaldatransparencia.gov.br, CGU) | CPF/CNPJ e a sua chave de API | Consultar sanções (CEIS/CNEP) |
 | BrasilAPI e Minha Receita | CNPJ | Razão social e nome fantasia |
-| Webhook (opcional, configurado por você) | Lista de processos novos | Avisar você (por exemplo, no WhatsApp) |
+| Webhook (opcional, configurado por você, só na extensão) | Lista de processos novos | Avisar você (por exemplo, no WhatsApp) |
+| WhatsApp (só no site, se ligado nas configurações) | Mensagem com os processos novos, para o telefone do seu cadastro | Avisar você |
 
 ## Sessão do jus.br
 

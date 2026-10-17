@@ -69,10 +69,10 @@
         <button type="button" id="btnCsv">Exportar planilha</button>
       </div>
       <div class="tabela"><table>
-        <thead><tr><th>Nome</th><th>Telefone</th><th>Cadastro</th><th>Último uso</th><th>Acessos</th><th>Versão</th><th></th></tr></thead>
+        <thead><tr><th>Nome</th><th>Telefone</th><th>Usa</th><th>Monitorados</th><th>Cadastro</th><th>Último uso</th><th>Acessos</th><th>Versão</th><th></th></tr></thead>
         <tbody id="linhas"></tbody>
       </table></div>
-      <p class="nota">Aqui aparecem só nome, telefone e uso. As consultas e os processos de cada pessoa ficam apenas no computador dela.</p>
+      <p class="nota">Aqui aparecem só nome, telefone, uso e a quantidade de documentos monitorados. Quais empresas e processos cada pessoa acompanha não aparecem aqui: na extensão ficam no computador dela, e no site ficam presos à conta dela.</p>
 
       <details class="cartao">
         <summary><strong>Trocar a senha do painel</strong></summary>
@@ -127,20 +127,23 @@
       $('#tiles').innerHTML = `
         <div class="tile"><b>${dados.length}</b><span>cadastrados</span></div>
         <div class="tile"><b>${novos7}</b><span>novos nos últimos 7 dias</span></div>
-        <div class="tile"><b>${ativos7}</b><span>usaram nos últimos 7 dias</span></div>`;
+        <div class="tile"><b>${ativos7}</b><span>usaram nos últimos 7 dias</span></div>
+        <div class="tile"><b>${dados.filter((d) => d.usa_site).length}</b><span>usam o site</span></div>`;
       const q = $('#busca').value.toLowerCase().replace(/\D/g, '') || $('#busca').value.toLowerCase();
       const lista = dados.filter((d) => !q || d.nome.toLowerCase().includes($('#busca').value.toLowerCase()) || d.telefone.includes(q));
       $('#linhas').innerHTML = lista.length
         ? lista.map((d) => `<tr>
             <td>${esc(d.nome)}</td>
             <td><a href="https://wa.me/${esc(d.telefone)}" target="_blank" rel="noopener">${esc(fmtTel(d.telefone))}</a></td>
+            <td>${d.usa_site ? 'Site' : 'Extensão'}</td>
+            <td>${d.monitorados || 0}</td>
             <td>${fmtData(d.criado_em)}</td>
             <td>${fmtData(d.ultimo_acesso)}</td>
             <td>${d.acessos}</td>
             <td>${esc(d.versao || '')}</td>
             <td><button type="button" class="perigo" data-id="${esc(d.id)}">Excluir</button></td>
           </tr>`).join('')
-        : '<tr><td colspan="7" class="vazio">Nenhum cadastro ainda.</td></tr>';
+        : '<tr><td colspan="9" class="vazio">Nenhum cadastro ainda.</td></tr>';
       $('#linhas').querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', async () => {
         if (!confirm('Excluir este cadastro? A pessoa terá que se cadastrar de novo para usar.')) return;
         b.disabled = true;
@@ -168,8 +171,8 @@
     $('#btnAtualizar').addEventListener('click', () => carregar().catch((e) => alert(e.message)));
     $('#busca').addEventListener('input', render);
     $('#btnCsv').addEventListener('click', () => {
-      const linhas = [['Nome', 'Telefone', 'Cadastro', 'Último uso', 'Acessos', 'Versão'],
-        ...dados.map((d) => [d.nome, fmtTel(d.telefone), fmtData(d.criado_em), fmtData(d.ultimo_acesso), d.acessos, d.versao || ''])];
+      const linhas = [['Nome', 'Telefone', 'Usa', 'Monitorados', 'Cadastro', 'Último uso', 'Acessos', 'Versão'],
+        ...dados.map((d) => [d.nome, fmtTel(d.telefone), d.usa_site ? 'Site' : 'Extensão', d.monitorados || 0, fmtData(d.criado_em), fmtData(d.ultimo_acesso), d.acessos, d.versao || ''])];
       const csv = linhas.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));

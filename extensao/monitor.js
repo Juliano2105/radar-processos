@@ -34,7 +34,8 @@
       try {
         const c = await Radar.fonteEsaj(s, { doc: m.doc, somenteContagem: true });
         if (c.total && c.total !== m.esajTotais[s]) {
-          const r = c.total <= 25 ? c : await Radar.fonteEsaj(s, { doc: m.doc, maxPaginas: 20 });
+          let r = c;
+          if (c.total > 25) { await Radar.sleep(2500); r = await Radar.fonteEsaj(s, { doc: m.doc, maxPaginas: 20 }); }
           blocos.push({ id: `esaj-${s}`, achados: r.achados });
         } else {
           blocos.push({ id: `esaj-${s}`, achados: c.achados });
@@ -164,5 +165,33 @@
     return linhas.join('\n').trim();
   }
 
-  global.Monitor = { buscarNovidades, verificarUm, textoWhatsapp, dataISO, MAX_PUBS_VISTAS };
+  /** Versão enxuta para guardar no servidor: só as publicações mais recentes de cada processo, com texto curto.
+   *  Empresas com milhares de processos vão sendo enxugadas até caber no limite. */
+  const NIVEIS = [
+    { pubs: 2, texto: 400, partes: 8 },
+    { pubs: 1, texto: 200, partes: 4 },
+    { pubs: 1, texto: 0, partes: 2 },
+    { pubs: 0, texto: 0, partes: 0 },
+  ];
+  function enxugar(m, n) {
+    return {
+      ...m,
+      processos: (m.processos || []).map((p) => ({
+        ...p,
+        partes: (p.partes || []).slice(0, n.partes),
+        links: (p.links || []).slice(0, 2),
+        publicacoes: (p.publicacoes || []).slice(0, n.pubs).map((x) => ({ ...x, texto: String(x.texto || '').slice(0, n.texto) })),
+      })),
+    };
+  }
+  function compactar(m, limite = 2400000) {
+    let r = m;
+    for (const n of NIVEIS) {
+      r = enxugar(m, n);
+      if (JSON.stringify(r).length <= limite) return r;
+    }
+    return r;
+  }
+
+  global.Monitor = { buscarNovidades, verificarUm, textoWhatsapp, compactar, dataISO, MAX_PUBS_VISTAS };
 })(typeof self !== 'undefined' ? self : globalThis);

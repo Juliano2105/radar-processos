@@ -324,7 +324,19 @@
   const dataIso = (br) => (br && /\d{2}\/\d{2}\/\d{4}/.test(br) ? br.split('/').reverse().join('-') : '');
 
   /** Consulta um e-SAJ pelo documento. `somenteContagem` lê só a 1ª página (para o monitoramento comparar o total). */
-  async function fonteEsaj(sigla, { doc, maxPaginas = 20, somenteContagem = false, progresso }) {
+  /** e-SAJ às vezes recusa uma busca logo após outra ("múltiplas consultas simultâneas"): espera e tenta de novo. */
+  async function fonteEsaj(sigla, opcoes) {
+    for (let t = 0; ; t++) {
+      try {
+        return await fonteEsajUma(sigla, opcoes);
+      } catch (e) {
+        if (t >= 2 || !/simult/i.test(String(e && e.message))) throw e;
+        await sleep(4000 * (t + 1));
+      }
+    }
+  }
+
+  async function fonteEsajUma(sigla, { doc, maxPaginas = 20, somenteContagem = false, progresso }) {
     const t = ESAJ[sigla];
     let erroCaminho = null;
     for (const caminho of t.caminhos) {

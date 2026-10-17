@@ -224,3 +224,11 @@ button.perigo { color: var(--acento); }
 .cad-cartao input { width: 100%; font-size: 17px; padding: 11px 14px; }
 .cad-cartao .primario { width: 100%; margin-top: 18px; padding: 13px; font-size: 16px; }
 .cad-cartao .nota { margin-top: 14px; }
+
+/* ---------- modo site ---------- */
+.cad-cartao [hidden] { display: none !important; }
+.link-modo { display: block; width: 100%; margin-top: 12px; background: none; border: 0; color: var(--primaria); font-weight: 600; text-decoration: underline; cursor: pointer; padding: 6px; }
+.modo-site .bloco[hidden], .modo-site .fonte-pdpj[hidden] { display: none; }
+.trocar-senha { margin-top: 10px; }
+.trocar-senha summary { cursor: pointer; color: var(--suave); }
+.trocar-senha input { min-width: 0; flex: 1 1 160px; }

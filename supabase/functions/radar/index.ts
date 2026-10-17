@@ -220,7 +220,7 @@ async function cron(corpo: any) {
       }
       await sb(`rp_monitorados?id=eq.${item.id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ dados: m, atualizado_em: new Date().toISOString() }),
+        body: JSON.stringify({ dados: Monitor.compactar(m), atualizado_em: new Date().toISOString() }),
         headers: { Prefer: 'return=minimal' },
       });
       feitos.push({ doc: item.doc.slice(0, 4) + '…', novos: r.resumo.novos, avisos: r.resumo.avisos.length });
