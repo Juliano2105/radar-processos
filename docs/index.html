@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Radar de Processos — instalar</title>
+  <meta name="description" content="Extensão gratuita do Chrome: digite um CNPJ ou CPF e veja processos judiciais em fontes públicas (DJEN, jus.br, e-SAJ) e sanções do governo.">
+  <meta property="og:title" content="Radar de Processos">
+  <meta property="og:description" content="Processos judiciais por CNPJ ou CPF, grátis, direto no Chrome.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/loja/bloco-promocional-440x280.png">
+  <link rel="icon" href="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/extensao/icons/32.png">
+  <style>
+    :root {
+      --fundo: #f4f2ee; --cartao: #fff; --texto: #1c1d21; --suave: #62646d; --linha: #e2dfd8;
+      --primaria: #1f3a5f; --primaria-txt: #fff; --acento: #c2410c; --ok: #15803d; --ok-fundo: #e7f5ec;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fundo: #15171c; --cartao: #1e2128; --texto: #ebeaf0; --suave: #a0a3ad; --linha: #2f333c;
+        --primaria: #8fb4e6; --primaria-txt: #0e1420; --acento: #fb923c; --ok: #4ade80; --ok-fundo: #16291e;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); }
+    main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+    .marca { display: flex; align-items: center; gap: 14px; }
+    .marca img { width: 56px; height: 56px; border-radius: 12px; }
+    h1 { font-size: 30px; line-height: 1.2; margin: 0; }
+    .sub { color: var(--suave); margin: 4px 0 0; }
+    .lead { font-size: 18px; margin: 28px 0 20px; }
+    .botoes { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 6px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 700; padding: 13px 20px; border-radius: 10px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); }
+    .btn.primario { background: var(--primaria); color: var(--primaria-txt); border-color: transparent; }
+    .nota { color: var(--suave); font-size: 14px; }
+    .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 20px 22px; margin: 22px 0; }
+    .cartao h2 { font-size: 18px; margin: 0 0 12px; }
+    ol { margin: 0; padding-left: 22px; }
+    ol li { margin: 8px 0; }
+    code { background: var(--fundo); border: 1px solid var(--linha); border-radius: 6px; padding: 1px 6px; font-size: 14px; }
+    .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .item { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px; }
+    .item b { display: block; margin-bottom: 2px; }
+    .item span { color: var(--suave); font-size: 14px; }
+    .print { width: 100%; border-radius: 12px; border: 1px solid var(--linha); display: block; margin: 8px 0 0; }
+    .selo { display: inline-block; font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: var(--ok-fundo); color: var(--ok); }
+    .aviso { border-left: 4px solid var(--acento); }
+    footer { margin-top: 40px; font-size: 14px; color: var(--suave); }
+    a { color: var(--primaria); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="marca">
+      <img src="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/extensao/icons/128.png" alt="">
+      <div>
+        <h1>Radar de Processos</h1>
+        <p class="sub">Extensão grátis para o Google Chrome · <span id="versao">última versão</span></p>
+      </div>
+    </div>
+
+    <p class="lead">Digite um <strong>CNPJ ou CPF</strong> e veja os processos judiciais encontrados em fontes públicas oficiais — e receba um aviso quando aparecer processo novo.</p>
+
+    <div class="botoes">
+      <a class="btn primario" id="btnLoja" href="#" hidden>Instalar pela Chrome Web Store</a>
+      <a class="btn primario" id="btnZip" href="https://github.com/Juliano2105/radar-processos/releases/latest/download/radar-processos.zip">⬇ Baixar a extensão (.zip)</a>
+    </div>
+    <p class="nota" id="notaInstalar">Funciona no Google Chrome (e no Edge/Brave) em computador. Não funciona no celular.</p>
+
+    <img class="print" src="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/loja/screenshot-1280x800.png" alt="Tela do Radar de Processos com processos encontrados para um CNPJ">
+
+    <div class="cartao" id="passos">
+      <h2>Como instalar (2 minutos)</h2>
+      <ol>
+        <li>Clique em <strong>Baixar a extensão</strong> e <strong>descompacte</strong> o arquivo numa pasta que você não vá apagar (por exemplo, <code>Documentos\radar-processos</code>).</li>
+        <li>No Chrome, abra o endereço <code>chrome://extensions</code>.</li>
+        <li>Ligue o <strong>Modo do desenvolvedor</strong> (chave no canto superior direito).</li>
+        <li>Clique em <strong>Carregar sem compactação</strong> e escolha a pasta que você descompactou.</li>
+        <li>Clique no ícone de quebra-cabeça 🧩 ao lado da barra de endereço e fixe o <strong>Radar de Processos</strong>. Clique no ícone, informe seu nome e telefone e pronto.</li>
+      </ol>
+      <p class="nota">Instalada assim, a extensão não se atualiza sozinha: para pegar uma versão nova, baixe de novo e substitua os arquivos da mesma pasta. Quando estiver disponível na Chrome Web Store, prefira instalar por lá — aí ela se atualiza automaticamente.</p>
+    </div>
+
+    <h2>Onde ela procura</h2>
+    <div class="grade">
+      <div class="item"><b>Diário Nacional (DJEN)</b><span>Intimações e editais de todos os tribunais, do CNJ</span></div>
+      <div class="item"><b>jus.br (CNJ)</b><span>Base nacional de processos, com a sua conta gov.br</span></div>
+      <div class="item"><b>e-SAJ</b><span>SP, MS, AL, CE, AM e AC, pelo documento</span></div>
+      <div class="item"><b>Portal da Transparência</b><span>Sanções do governo (CEIS e CNEP)</span></div>
+    </div>
+
+    <div class="cartao">
+      <h2>O que você recebe</h2>
+      <ul>
+        <li>Processos trabalhistas, de cobrança, fiscais, de consumidor e outros, separados por tipo</li>
+        <li>Se a empresa ou pessoa é <strong>ré</strong> ou <strong>autora</strong></li>
+        <li>Texto das publicações e link para o documento no tribunal</li>
+        <li>Planilha para Excel com um clique</li>
+        <li>Monitoramento: avisa no computador (e no WhatsApp, se você configurar) quando surge processo novo</li>
+      </ul>
+    </div>
+
+    <div class="cartao aviso">
+      <h2>Bom saber</h2>
+      <ul>
+        <li><span class="selo">Grátis</span> Cadastro só com nome e telefone. As consultas saem do seu navegador direto para as fontes oficiais.</li>
+        <li><strong>Seus processos são só seus:</strong> as empresas e pessoas que você consulta, os processos e os alertas ficam apenas no seu computador. Nenhum outro usuário — nem o administrador — consegue ver.</li>
+        <li>Processos em segredo de justiça não aparecem. No Diário Nacional, o processo só aparece depois de alguma publicação.</li>
+        <li>O Diário Nacional só aceita conexões do Brasil — se usar VPN estrangeira, desligue.</li>
+        <li>Consulta de CPF de outras pessoas: use apenas para fins legítimos (LGPD).</li>
+      </ul>
+    </div>
+
+    <footer>
+      <a href="https://github.com/Juliano2105/radar-processos/blob/main/PRIVACY.md">Política de privacidade</a> ·
+      <a href="https://github.com/Juliano2105/radar-processos">Código-fonte</a> ·
+      <a href="https://github.com/Juliano2105/radar-processos/issues">Relatar problema</a>
+    </footer>
+  </main>
+
+  <script>
+    // Quando a extensão estiver aprovada na Chrome Web Store, cole o link dela aqui:
+    const LINK_CHROME_WEB_STORE = '';
+
+    if (LINK_CHROME_WEB_STORE) {
+      const loja = document.getElementById('btnLoja');
+      loja.href = LINK_CHROME_WEB_STORE;
+      loja.hidden = false;
+      const zip = document.getElementById('btnZip');
+      zip.classList.remove('primario');
+      zip.textContent = 'Instalação manual (.zip)';
+      document.getElementById('notaInstalar').textContent = 'Pela Chrome Web Store a extensão se atualiza sozinha. Funciona no Chrome (e no Edge/Brave) em computador.';
+    }
+
+    fetch('https://api.github.com/repos/Juliano2105/radar-processos/releases/latest')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!j || !j.name) return;
+        const v = (j.name.match(/\d+\.\d+\.\d+/) || [])[0];
+        if (v) document.getElementById('versao').textContent = `versão ${v}`;
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

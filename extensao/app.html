@@ -8,6 +8,23 @@
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
+  <div id="telaCadastro" class="tela-cadastro" hidden>
+    <form id="formCadastro" class="cad-cartao">
+      <div class="marca">
+        <img src="icons/48.png" alt="" width="36" height="36">
+        <div><strong>Radar de Processos</strong><span>Cadastro rápido e grátis</span></div>
+      </div>
+      <h2>Bem-vindo!</h2>
+      <p class="nota">Informe seu nome e telefone para começar a usar.</p>
+      <label for="cadNome">Nome</label>
+      <input id="cadNome" autocomplete="name" maxlength="120" required>
+      <label for="cadTel">Telefone (WhatsApp)</label>
+      <input id="cadTel" inputmode="tel" autocomplete="tel" placeholder="(43) 99999-9999" maxlength="16" required>
+      <p class="erro" id="cadErro" hidden></p>
+      <button type="submit" class="primario" id="cadBtn">Começar</button>
+      <p class="nota">Guardamos só seu nome e telefone. As empresas e pessoas que você consulta, os processos e os alertas ficam apenas neste computador — ninguém mais vê.</p>
+    </form>
+  </div>
   <header class="topo">
     <div class="marca">
       <img src="icons/48.png" alt="" width="28" height="28">
@@ -160,6 +177,10 @@
           <span id="statusWebhook" class="nota"></span>
         </div>
       </div>
+      <div class="bloco">
+        <h3>Seu cadastro</h3>
+        <p id="cfgConta" class="nota"></p>
+      </div>
       <button type="button" class="primario" id="btnSalvarCfg">Salvar</button>
       <span id="statusCfg" class="nota"></span>
 
@@ -185,6 +206,7 @@
   </template>
 
   <script src="lib.js"></script>
+  <script src="conta.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

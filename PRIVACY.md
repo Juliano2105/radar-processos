@@ -6,9 +6,18 @@ O **Radar de Processos** é uma extensão do Chrome que consulta, em fontes púb
 
 ## Resumo
 
-- **Não temos servidor.** As consultas saem do seu navegador direto para as fontes oficiais listadas abaixo. Nada passa por nós.
-- **Não coletamos, vendemos nem compartilhamos dados.** Não há rastreadores, analytics nem anúncios.
-- Tudo o que a extensão guarda (documentos monitorados, alertas, configurações) fica **no armazenamento local do seu Chrome**.
+- **Cadastro:** para usar, você informa **nome e telefone**. Só isso (mais a data do último uso e a versão da extensão) é guardado no nosso banco de dados, para sabermos quem usa a ferramenta.
+- **As consultas não passam por nós.** Elas saem do seu navegador direto para as fontes oficiais listadas abaixo. Os CPFs/CNPJs consultados, os processos encontrados, os monitorados e os alertas ficam **somente no seu Chrome** — nem o administrador nem outros usuários conseguem vê-los.
+- **Não vendemos nem compartilhamos dados.** Não há rastreadores, analytics nem anúncios.
+
+## Cadastro
+
+| Dado | Para quê | Onde fica |
+|---|---|---|
+| Nome e telefone | Identificar quem usa a ferramenta e poder entrar em contato | Banco de dados do Radar (Supabase, região São Paulo), visível só para o administrador |
+| Data do último uso e versão da extensão | Saber se a ferramenta está sendo usada e atualizada | Mesmo banco |
+
+Você pode pedir a exclusão do seu cadastro a qualquer momento pelo contato abaixo.
 
 ## Para onde vão as consultas
 

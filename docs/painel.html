@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Radar de Processos — painel</title>
+  <link rel="icon" href="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/extensao/icons/32.png">
+  <style>
+    :root { --fundo:#f4f2ee; --cartao:#fff; --texto:#1c1d21; --suave:#62646d; --linha:#e2dfd8; --primaria:#1f3a5f; --primaria-txt:#fff; --acento:#c2410c; --ok:#15803d; --ok-fundo:#e7f5ec; }
+    @media (prefers-color-scheme: dark) { :root { --fundo:#15171c; --cartao:#1e2128; --texto:#ebeaf0; --suave:#a0a3ad; --linha:#2f333c; --primaria:#8fb4e6; --primaria-txt:#0e1420; --acento:#fb923c; --ok:#4ade80; --ok-fundo:#16291e; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); }
+    main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 64px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .marca { display: flex; align-items: center; gap: 10px; }
+    .marca img { width: 36px; height: 36px; border-radius: 8px; }
+    h1 { font-size: 20px; margin: 0; }
+    .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 18px 20px; }
+    input { font: inherit; color: var(--texto); background: var(--cartao); border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+    button { font: inherit; font-weight: 600; cursor: pointer; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); border-radius: 8px; padding: 9px 14px; }
+    button.primario { background: var(--primaria); color: var(--primaria-txt); border-color: transparent; }
+    button.perigo { color: var(--acento); }
+    button:disabled { opacity: .5; }
+    .login { max-width: 380px; margin: 60px auto; }
+    .login input { width: 100%; margin: 8px 0 12px; }
+    .login button { width: 100%; }
+    .erro { color: var(--acento); font-weight: 600; }
+    .nota { color: var(--suave); font-size: 13px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .tile { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 12px 14px; }
+    .tile b { display: block; font-size: 26px; font-variant-numeric: tabular-nums; }
+    .tile span { color: var(--suave); font-size: 13px; }
+    .barra { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .barra input { flex: 1; min-width: 200px; }
+    .tabela { overflow-x: auto; background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--linha); white-space: nowrap; }
+    th { color: var(--suave); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    td a { color: var(--ok); font-weight: 600; text-decoration: none; }
+    .vazio { padding: 28px; text-align: center; color: var(--suave); }
+    details { margin-top: 18px; }
+    details .linha { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="marca">
+        <img src="https://raw.githubusercontent.com/Juliano2105/radar-processos/main/extensao/icons/128.png" alt="">
+        <div><h1>Radar de Processos — cadastros</h1><span class="nota">Painel do administrador</span></div>
+      </div>
+      <button type="button" id="btnSair" hidden>Sair</button>
+    </header>
+
+    <form id="formLogin" class="cartao login">
+      <strong>Entrar no painel</strong>
+      <input type="password" id="senha" placeholder="Senha do administrador" autocomplete="current-password" required>
+      <button type="submit" class="primario" id="btnEntrar">Entrar</button>
+      <p class="erro" id="erroLogin" hidden></p>
+    </form>
+
+    <section id="painel" hidden>
+      <div class="tiles" id="tiles"></div>
+      <div class="barra">
+        <input id="busca" placeholder="Buscar por nome ou telefone">
+        <button type="button" id="btnAtualizar">Atualizar</button>
+        <button type="button" id="btnCsv">Exportar planilha</button>
+      </div>
+      <div class="tabela"><table>
+        <thead><tr><th>Nome</th><th>Telefone</th><th>Cadastro</th><th>Último uso</th><th>Acessos</th><th>Versão</th><th></th></tr></thead>
+        <tbody id="linhas"></tbody>
+      </table></div>
+      <p class="nota">Aqui aparecem só nome, telefone e uso. As consultas e os processos de cada pessoa ficam apenas no computador dela.</p>
+
+      <details class="cartao">
+        <summary><strong>Trocar a senha do painel</strong></summary>
+        <div class="linha">
+          <input type="password" id="novaSenha" placeholder="Nova senha (mín. 10 caracteres)" autocomplete="new-password">
+          <button type="button" id="btnTrocar">Trocar senha</button>
+          <span class="nota" id="statusSenha"></span>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <script>
+    const URL_SB = 'https://ovvenrskswsurqzjydby.supabase.co';
+    const CHAVE = 'sb_publishable_AeRqPu_qi6TjK3F7ybRsYA_e151bNZg';
+    const $ = (s) => document.querySelector(s);
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    let senha = '';
+    let dados = [];
+
+    async function rpc(funcao, corpo) {
+      const r = await fetch(`${URL_SB}/rest/v1/rpc/${funcao}`, {
+        method: 'POST',
+        headers: { apikey: CHAVE, Authorization: `Bearer ${CHAVE}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(corpo),
+      });
+      const t = await r.text();
+      let j = null; try { j = t ? JSON.parse(t) : null; } catch (_) {}
+      if (!r.ok) throw new Error((j && j.message) || `HTTP ${r.status}`);
+      return j;
+    }
+
+    const fmtTel = (t) => {
+      let d = String(t || '').replace(/\D/g, '');
+      if (d.startsWith('55') && d.length > 11) d = d.slice(2);
+      return d.length === 11 ? d.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3') : d.length === 10 ? d.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3') : t;
+    };
+    const fmtData = (s) => (s ? new Date(s).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '');
+    const dias = (s) => (Date.now() - new Date(s).getTime()) / 864e5;
+
+    async function carregar() {
+      dados = await rpc('rp_admin_listar', { p_senha: senha });
+      $('#formLogin').hidden = true;
+      $('#painel').hidden = false;
+      $('#btnSair').hidden = false;
+      render();
+    }
+
+    function render() {
+      const ativos7 = dados.filter((d) => dias(d.ultimo_acesso) <= 7).length;
+      const novos7 = dados.filter((d) => dias(d.criado_em) <= 7).length;
+      $('#tiles').innerHTML = `
+        <div class="tile"><b>${dados.length}</b><span>cadastrados</span></div>
+        <div class="tile"><b>${novos7}</b><span>novos nos últimos 7 dias</span></div>
+        <div class="tile"><b>${ativos7}</b><span>usaram nos últimos 7 dias</span></div>`;
+      const q = $('#busca').value.toLowerCase().replace(/\D/g, '') || $('#busca').value.toLowerCase();
+      const lista = dados.filter((d) => !q || d.nome.toLowerCase().includes($('#busca').value.toLowerCase()) || d.telefone.includes(q));
+      $('#linhas').innerHTML = lista.length
+        ? lista.map((d) => `<tr>
+            <td>${esc(d.nome)}</td>
+            <td><a href="https://wa.me/${esc(d.telefone)}" target="_blank" rel="noopener">${esc(fmtTel(d.telefone))}</a></td>
+            <td>${fmtData(d.criado_em)}</td>
+            <td>${fmtData(d.ultimo_acesso)}</td>
+            <td>${d.acessos}</td>
+            <td>${esc(d.versao || '')}</td>
+            <td><button type="button" class="perigo" data-id="${esc(d.id)}">Excluir</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="7" class="vazio">Nenhum cadastro ainda.</td></tr>';
+      $('#linhas').querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', async () => {
+        if (!confirm('Excluir este cadastro? A pessoa terá que se cadastrar de novo para usar.')) return;
+        b.disabled = true;
+        try { await rpc('rp_admin_excluir', { p_senha: senha, p_id: b.dataset.id }); await carregar(); } catch (e) { alert(e.message); b.disabled = false; }
+      }));
+    }
+
+    $('#formLogin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      senha = $('#senha').value;
+      $('#btnEntrar').disabled = true;
+      $('#erroLogin').hidden = true;
+      try {
+        await carregar();
+        try { sessionStorage.setItem('rp_painel', senha); } catch (_) {}
+      } catch (err) {
+        $('#erroLogin').textContent = err.message;
+        $('#erroLogin').hidden = false;
+      } finally { $('#btnEntrar').disabled = false; }
+    });
+    $('#btnSair').addEventListener('click', () => {
+      try { sessionStorage.removeItem('rp_painel'); } catch (_) {}
+      location.reload();
+    });
+    $('#btnAtualizar').addEventListener('click', () => carregar().catch((e) => alert(e.message)));
+    $('#busca').addEventListener('input', render);
+    $('#btnCsv').addEventListener('click', () => {
+      const linhas = [['Nome', 'Telefone', 'Cadastro', 'Último uso', 'Acessos', 'Versão'],
+        ...dados.map((d) => [d.nome, fmtTel(d.telefone), fmtData(d.criado_em), fmtData(d.ultimo_acesso), d.acessos, d.versao || ''])];
+      const csv = linhas.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = `radar-cadastros-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    });
+    $('#btnTrocar').addEventListener('click', async () => {
+      const nova = $('#novaSenha').value;
+      try {
+        await rpc('rp_admin_trocar_senha', { p_senha: senha, p_nova: nova });
+        senha = nova;
+        try { sessionStorage.setItem('rp_painel', senha); } catch (_) {}
+        $('#novaSenha').value = '';
+        $('#statusSenha').textContent = 'Senha trocada ✓';
+      } catch (e) { $('#statusSenha').textContent = e.message; }
+    });
+
+    try {
+      const s = sessionStorage.getItem('rp_painel');
+      if (s) { senha = s; carregar().catch(() => { try { sessionStorage.removeItem('rp_painel'); } catch (_) {} }); }
+    } catch (_) {}
+  </script>
+</body>
+</html>

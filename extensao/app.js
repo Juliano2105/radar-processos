@@ -619,3 +619,47 @@ atualizarContadores();
 renderSessao();
 const inicial = location.hash.replace('#', '');
 if (['monitorados', 'alertas', 'config'].includes(inicial)) abrirAba(inicial);
+
+/* ---------- cadastro ---------- */
+$('#cadTel').addEventListener('input', (e) => {
+  const d = Radar.soDigitos(e.target.value).slice(0, 11);
+  let v = d;
+  if (d.length > 2) v = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length > 6) v = d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  e.target.value = v;
+});
+$('#formCadastro').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const erro = $('#cadErro');
+  erro.hidden = true;
+  $('#cadBtn').disabled = true;
+  $('#cadBtn').textContent = 'Cadastrando…';
+  try {
+    await Conta.cadastrar($('#cadNome').value, $('#cadTel').value);
+    $('#telaCadastro').hidden = true;
+    renderConta();
+    $('#doc').focus();
+  } catch (err) {
+    erro.textContent = err.message || String(err);
+    erro.hidden = false;
+  } finally {
+    $('#cadBtn').disabled = false;
+    $('#cadBtn').textContent = 'Começar';
+  }
+});
+async function renderConta() {
+  const c = await Conta.lerCadastro();
+  $('#cfgConta').textContent = c ? `${c.nome} · ${Conta.formatarTelefone(c.telefone)}` : 'Não cadastrado.';
+}
+async function exigirCadastro() {
+  const c = await Conta.lerCadastro();
+  if (!c) {
+    $('#telaCadastro').hidden = false;
+    $('#cadNome').focus();
+    return;
+  }
+  renderConta();
+  const ok = await Conta.registrarUso();
+  if (!ok) exigirCadastro();
+}
+exigirCadastro();
