@@ -37,7 +37,8 @@ Consulte e monitore processos judiciais de qualquer empresa ou pessoa, só com o
 • Notificação no computador e aviso por webhook (WhatsApp via Evolution API, n8n, etc.)
 
 🔒 PRIVACIDADE
-• Nada passa por servidores nossos
+• Cadastro rápido só com nome e telefone
+• As consultas não passam por servidores nossos
 • Monitorados e alertas ficam no seu computador
 • A senha do gov.br nunca passa pela extensão
 
@@ -52,10 +53,11 @@ Processos em segredo de justiça não aparecem. Use os dados de acordo com a LGP
 - **notifications:** avisar o usuário quando surgir processo novo.
 - **declarativeNetRequest:** definir os cabeçalhos Origin/Referer exigidos pelas APIs públicas do CNJ (DJEN e jus.br) nas chamadas feitas pela extensão.
 - **clipboardWrite:** copiar o CPF/CNPJ quando o usuário clica num atalho para sites oficiais que exigem captcha.
+- **ovvenrskswsurqzjydby.supabase.co:** cadastro do usuário (nome e telefone) e registro da data de uso.
 - **Permissões de host:** cada domínio corresponde a uma fonte oficial consultada (CNJ, tribunais e-SAJ, Portal da Transparência) ou a uma API de dados cadastrais de CNPJ (BrasilAPI, Minha Receita).
 - **Script de conteúdo no jus.br:** quando o usuário entra no jus.br com a própria conta gov.br, lê o cabeçalho de autorização que o portal já envia às APIs do CNJ, para que a extensão faça as consultas em nome do usuário. Não lê senha nem formulários; o token fica só no computador do usuário.
 - **Código remoto:** não usa. Todo o código está no pacote.
 
-**Uso de dados:** marque "Informações de autenticação" (token da sessão do jus.br, armazenado localmente) e "Informações de identificação pessoal" (CPF/CNPJ digitados pelo usuário, enviados apenas às fontes consultadas). Declare que os dados não são vendidos, não são usados para fins alheios à finalidade única e não são usados para crédito.
+ **Uso de dados:** marque também "Informações de identificação pessoal" para o nome e telefone do cadastro. Marque "Informações de autenticação" (token da sessão do jus.br, armazenado localmente) e "Informações de identificação pessoal" (CPF/CNPJ digitados pelo usuário, enviados apenas às fontes consultadas). Declare que os dados não são vendidos, não são usados para fins alheios à finalidade única e não são usados para crédito.
 
 **Política de privacidade:** https://github.com/Juliano2105/radar-processos/blob/main/PRIVACY.md

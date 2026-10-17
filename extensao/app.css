@@ -213,3 +213,14 @@ button.perigo { color: var(--acento); }
 .check { display: block; position: relative; padding-left: 26px; }
 .check input { position: absolute; left: 0; top: 3px; margin: 0; }
 .check small { margin-left: 2px; }
+
+/* cadastro */
+.tela-cadastro { position: fixed; inset: 0; z-index: 50; background: var(--fundo); display: flex; align-items: center; justify-content: center; padding: 16px; overflow: auto; }
+.tela-cadastro[hidden] { display: none; }
+.cad-cartao { width: 100%; max-width: 420px; background: var(--cartao); border: 1px solid var(--linha); border-radius: 14px; padding: 28px 26px; box-shadow: var(--sombra); }
+.cad-cartao .marca { margin-bottom: 16px; }
+.cad-cartao h2 { margin: 0 0 4px; }
+.cad-cartao label { display: block; font-weight: 700; margin: 14px 0 6px; }
+.cad-cartao input { width: 100%; font-size: 17px; padding: 11px 14px; }
+.cad-cartao .primario { width: 100%; margin-top: 18px; padding: 13px; font-size: 16px; }
+.cad-cartao .nota { margin-top: 14px; }

@@ -1,5 +1,5 @@
 /* Radar de Processos — segundo plano: abrir a tela, guardar a sessão do jus.br, monitorar e avisar. */
-importScripts('lib.js');
+importScripts('lib.js', 'conta.js');
 
 const CONFIG_PADRAO = {
   intervaloHoras: 6,
@@ -156,7 +156,9 @@ async function buscarNovidades(m, cfg, token) {
 
 async function verificarTodos(somenteDoc) {
   if (rodando) return { ocupado: true };
+  if (!(await Conta.lerCadastro())) return [];
   rodando = true;
+  Conta.registrarUso().catch(() => {});
   try {
     const cfg = await lerConfig();
     const token = await lerToken();
