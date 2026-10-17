@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "origin", "operation": "set", "value": "https://comunica.pje.jus.br" },
+        { "header": "referer", "operation": "set", "value": "https://comunica.pje.jus.br/" }
+      ]
+    },
+    "condition": {
+      "requestDomains": ["comunicaapi.pje.jus.br"],
+      "excludedInitiatorDomains": ["jus.br"],
+      "resourceTypes": ["xmlhttprequest", "other"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "origin", "operation": "set", "value": "https://portaldeservicos.pdpj.jus.br" },
+        { "header": "referer", "operation": "set", "value": "https://portaldeservicos.pdpj.jus.br/consulta" }
+      ]
+    },
+    "condition": {
+      "requestDomains": ["pdpj.jus.br"],
+      "excludedInitiatorDomains": ["jus.br"],
+      "resourceTypes": ["xmlhttprequest", "other"]
+    }
+  }
+]

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Radar de Processos</title>
+  <link rel="icon" href="icons/32.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">
+      <img src="icons/48.png" alt="" width="28" height="28">
+      <div>
+        <strong>Radar de Processos</strong>
+        <span>DJEN · jus.br · e-SAJ · Transparência</span>
+      </div>
+    </div>
+    <nav class="abas" role="tablist">
+      <button class="aba ativa" data-aba="consultar" role="tab">Consultar</button>
+      <button class="aba" data-aba="monitorados" role="tab">Monitorados <span class="cont" id="contMon"></span></button>
+      <button class="aba" data-aba="alertas" role="tab">Alertas <span class="cont alerta" id="contAlertas"></span></button>
+      <button class="aba" data-aba="config" role="tab">Configurações</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- CONSULTAR -->
+    <section id="consultar" class="painel ativo">
+      <form id="formDoc" class="busca">
+        <label for="doc">CNPJ ou CPF</label>
+        <div class="linha">
+          <input id="doc" inputmode="numeric" autocomplete="off" placeholder="00.000.000/0000-00 ou 000.000.000-00" maxlength="18" autofocus>
+          <button type="submit" class="primario" id="btnConsultar">Consultar</button>
+        </div>
+        <p class="erro" id="erroDoc" hidden></p>
+      </form>
+
+      <div id="alvo" hidden></div>
+
+      <div id="refino" class="refino" hidden>
+        <div class="bloco">
+          <h3>Nomes para procurar no Diário Nacional</h3>
+          <p class="nota" id="notaNomes"></p>
+          <label class="check"><input type="checkbox" id="porNome" checked> Procurar também pelo nome <small>(acha publicações sem o documento, mas pode trazer homônimos)</small></label>
+          <div id="nomes" class="nomes"></div>
+          <div class="linha pequena">
+            <input id="novoNome" placeholder="Adicionar nome (filial, nome antigo, nome da pessoa…)">
+            <button type="button" id="btnAddNome">Adicionar</button>
+          </div>
+        </div>
+        <div class="bloco">
+          <h3>Onde procurar</h3>
+          <label class="check"><input type="checkbox" id="fDjen" checked> Diário Nacional (DJEN) <small>— todos os tribunais, processos com publicação</small></label>
+          <div class="fonte-pdpj">
+            <label class="check"><input type="checkbox" id="fPdpj" checked> jus.br (CNJ) <small>— base nacional, pelo documento</small></label>
+            <div class="sessao" id="sessaoPdpj"></div>
+          </div>
+          <div class="grupo">e-SAJ (busca pelo documento)</div>
+          <div id="fEsaj" class="esaj"></div>
+          <label class="check"><input type="checkbox" id="fTransp"> Sanções do governo (Portal da Transparência) <small id="notaTransp"></small></label>
+          <label class="periodo">Período do Diário Nacional
+            <select id="periodo">
+              <option value="30">Últimos 30 dias</option>
+              <option value="180">Últimos 6 meses</option>
+              <option value="365">Último ano</option>
+              <option value="1095">Últimos 3 anos</option>
+              <option value="0" selected>Tudo o que existir</option>
+            </select>
+          </label>
+          <button type="button" class="primario" id="btnBuscar">Buscar processos</button>
+        </div>
+      </div>
+
+      <div id="progresso" class="progresso" hidden>
+        <div class="barra"><span id="barra"></span></div>
+        <p id="progressoTexto"></p>
+      </div>
+
+      <div id="resultado" hidden>
+        <div id="statusFontes" class="status-fontes"></div>
+        <div id="sancoes"></div>
+        <div class="resumo" id="resumo"></div>
+        <div class="filtros">
+          <div class="chips" id="chips"></div>
+          <div class="linha pequena">
+            <label class="check"><input type="checkbox" id="soConfirmados"> Só confirmados pelo documento</label>
+            <label class="check"><input type="checkbox" id="soComoRe"> Só onde é ré</label>
+            <input id="filtroTexto" placeholder="Filtrar por número, parte, vara…">
+          </div>
+        </div>
+        <div class="acoes">
+          <button type="button" class="primario" id="btnMonitorar">Monitorar este documento</button>
+          <button type="button" id="btnCsv">Exportar planilha (CSV)</button>
+        </div>
+        <div id="lista" class="lista"></div>
+
+        <div class="bloco atalhos">
+          <h3>Consultar também (sites com captcha — o documento é copiado ao clicar)</h3>
+          <div id="atalhos" class="linha"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONITORADOS -->
+    <section id="monitorados" class="painel">
+      <div class="cabecalho">
+        <h2>Monitorados</h2>
+        <button type="button" id="btnVerificarTodos">Verificar todos agora</button>
+      </div>
+      <p class="nota" id="notaMon"></p>
+      <div id="listaMon" class="lista"></div>
+    </section>
+
+    <!-- ALERTAS -->
+    <section id="alertas" class="painel">
+      <div class="cabecalho">
+        <h2>Alertas</h2>
+        <div class="linha pequena">
+          <button type="button" id="btnLidos">Marcar todos como lidos</button>
+          <button type="button" id="btnLimpar">Limpar lidos</button>
+        </div>
+      </div>
+      <div id="listaAlertas" class="lista"></div>
+    </section>
+
+    <!-- CONFIG -->
+    <section id="config" class="painel">
+      <h2>Configurações</h2>
+      <div class="bloco">
+        <h3>jus.br (base nacional do CNJ)</h3>
+        <p class="nota">Busca por CPF/CNPJ em todos os tribunais. Funciona com a sua própria conta gov.br: clique em “Conectar”, entre no jus.br normalmente e volte aqui. A extensão aproveita a sessão aberta (ela dura algumas horas) e nunca vê a sua senha.</p>
+        <div class="sessao" id="sessaoPdpjCfg"></div>
+      </div>
+      <div class="bloco">
+        <h3>Portal da Transparência</h3>
+        <p class="nota">Para consultar sanções (CEIS e CNEP), crie uma chave grátis em <a href="https://portaldatransparencia.gov.br/api-de-dados/cadastrar-email" target="_blank" rel="noopener">portaldatransparencia.gov.br/api-de-dados</a> (chega por e-mail) e cole abaixo.</p>
+        <input id="cfgChave" placeholder="Chave da API" autocomplete="off">
+      </div>
+      <div class="bloco">
+        <h3>Monitoramento</h3>
+        <label>Verificar a cada
+          <select id="cfgIntervalo">
+            <option value="2">2 horas</option>
+            <option value="6">6 horas</option>
+            <option value="12">12 horas</option>
+            <option value="24">24 horas</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="cfgNotif"> Mostrar notificação no computador</label>
+        <label class="check"><input type="checkbox" id="cfgPubs"> Avisar também de novas publicações em processos já conhecidos</label>
+        <p class="nota">O Chrome precisa estar aberto para a verificação rodar. Se ficar fechado, ela roda assim que você abrir.</p>
+      </div>
+      <div class="bloco">
+        <h3>Aviso no WhatsApp (webhook)</h3>
+        <p class="nota">Cole a URL de um webhook (Evolution API, n8n, Make, Z-API…). A cada novidade a extensão envia um POST com os processos novos em JSON.</p>
+        <input id="cfgWebhook" placeholder="https://…">
+        <div class="linha pequena">
+          <button type="button" id="btnTestarWebhook">Testar</button>
+          <span id="statusWebhook" class="nota"></span>
+        </div>
+      </div>
+      <button type="button" class="primario" id="btnSalvarCfg">Salvar</button>
+      <span id="statusCfg" class="nota"></span>
+
+      <div class="bloco sobre">
+        <h3>De onde vêm os dados</h3>
+        <p><strong>DJEN</strong> (CNJ): intimações e editais publicados por todos os tribunais. <strong>jus.br</strong> (CNJ): base nacional de processos, por CPF/CNPJ, com sua conta gov.br. <strong>e-SAJ</strong>: consulta pública de SP, MS, AL, CE, AM e AC. <strong>Portal da Transparência</strong> (CGU): sanções. Dados do CNPJ: BrasilAPI e Minha Receita. Nada é pago; as consultas saem do seu navegador direto para essas fontes.</p>
+        <p><strong>Limites:</strong> processos em segredo de justiça não aparecem; no DJEN o processo só aparece depois de alguma publicação; o DJEN só aceita conexões do Brasil. Ao consultar CPF de outras pessoas, use os dados com responsabilidade (LGPD).</p>
+      </div>
+    </section>
+  </main>
+
+  <template id="tplProcesso">
+    <article class="proc">
+      <button type="button" class="proc-topo">
+        <div class="proc-id">
+          <span class="num"></span>
+          <span class="tags"></span>
+        </div>
+        <div class="proc-info"></div>
+      </button>
+      <div class="pubs" hidden></div>
+    </article>
+  </template>
+
+  <script src="lib.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

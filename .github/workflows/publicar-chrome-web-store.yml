@@ -1,0 +1,88 @@
+# Radar de Processos — publicação automática na Chrome Web Store.
+#
+# Como funciona:
+#   - Todo push na branch "main" que mexa na pasta "extensao/" gera um número
+#     de versão novo automaticamente (ex.: 2.0.37), empacota a extensão e envia
+#     para a Chrome Web Store. Depois da revisão do Google, todo mundo que tem a
+#     extensão instalada recebe a atualização sozinho.
+#   - Funciona com edição feita pelo celular (app do GitHub ou github.com): é só
+#     salvar (commit) na branch main.
+#   - O .zip também fica disponível na aba "Actions" do GitHub.
+#   - Para salvar uma mudança SEM publicar, coloque [skip publish] na mensagem.
+#
+# Segredos necessários (Settings > Secrets and variables > Actions):
+#   CWS_EXTENSION_ID   ID da extensão (aparece no painel da loja após o 1º envio manual)
+#   CWS_CLIENT_ID      OAuth Client ID do Google Cloud (o mesmo usado no Gravador XOPI)
+#   CWS_CLIENT_SECRET  OAuth Client Secret (o mesmo do Gravador XOPI)
+#   CWS_REFRESH_TOKEN  Refresh token com o escopo chromewebstore (o mesmo do Gravador XOPI)
+# Enquanto os segredos não existirem, o workflow só valida e guarda o .zip.
+
+name: Publicar na Chrome Web Store
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "extensao/**"
+      - ".github/workflows/publicar-chrome-web-store.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: publicar-cws
+  cancel-in-progress: false
+
+jobs:
+  empacotar-e-publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Conferir o código (sintaxe e manifest)
+        run: node scripts/verificar.mjs
+
+      - name: Definir versão automática
+        id: versao
+        run: |
+          BASE=$(node -p "require('./extensao/manifest.json').version.split('.').slice(0,2).join('.')")
+          VERSAO="$BASE.${{ github.run_number }}"
+          echo "versao=$VERSAO" >> "$GITHUB_OUTPUT"
+          echo "Versão desta publicação: $VERSAO"
+
+      - name: Aplicar versão e gerar .zip
+        run: |
+          mkdir -p build && cp -r extensao/. build/
+          node -e "
+            const fs = require('fs');
+            const p = 'build/manifest.json';
+            const m = JSON.parse(fs.readFileSync(p, 'utf8'));
+            m.version = '${{ steps.versao.outputs.versao }}';
+            fs.writeFileSync(p, JSON.stringify(m, null, 2));
+          "
+          cd build && zip -qr "../radar-processos-${{ steps.versao.outputs.versao }}.zip" . && cd ..
+          ls -lh radar-processos-*.zip
+
+      - name: Guardar .zip no GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-processos-${{ steps.versao.outputs.versao }}
+          path: radar-processos-${{ steps.versao.outputs.versao }}.zip
+          retention-days: 90
+
+      - name: Enviar e publicar na Chrome Web Store
+        if: ${{ !contains(github.event.head_commit.message, '[skip publish]') }}
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          if [ -z "$EXTENSION_ID" ] || [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ] || [ -z "$REFRESH_TOKEN" ]; then
+            echo "::notice::Segredos da Chrome Web Store ainda não configurados — só o .zip foi gerado."
+            exit 0
+          fi
+          npx --yes chrome-webstore-upload-cli@3 --source "radar-processos-${{ steps.versao.outputs.versao }}.zip" --max-await-in-progress 120
