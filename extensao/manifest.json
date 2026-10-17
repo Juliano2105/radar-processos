@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Radar de Processos",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Digite um CNPJ ou CPF e veja processos judiciais em fontes públicas e gratuitas (DJEN, jus.br, e-SAJ) e sanções do governo. Monitora e avisa de processos novos.",
   "action": {
     "default_title": "Radar de Processos",

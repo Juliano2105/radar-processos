@@ -88,6 +88,7 @@ $('#formDoc').addEventListener('submit', async (e) => {
     }
     estado.alvo = alvo;
     montarNomes(alvo);
+    await restaurarMonitorado(d);
     renderAlvo();
     await renderFontes();
     $('#refino').hidden = false;
@@ -96,6 +97,24 @@ $('#formDoc').addEventListener('submit', async (e) => {
     $('#btnConsultar').disabled = false;
   }
 });
+
+/** Ao abrir um documento monitorado, volta os nomes e o período usados quando ele foi salvo. */
+async function restaurarMonitorado(doc) {
+  const pedido = estado.restaurar === doc;
+  estado.restaurar = null;
+  const { monitorados = {} } = await chrome.storage.local.get('monitorados');
+  const m = monitorados[doc];
+  if (!m) return;
+  const nomes = m.nomesBusca || [];
+  nomes.forEach((nome) => {
+    const n = estado.nomes.find((x) => x.nome === nome);
+    if (n) n.marcado = true;
+    else estado.nomes.push({ nome, grupo: 'extra', marcado: true });
+  });
+  if (nomes.length) $('#porNome').checked = true;
+  if (pedido && m.periodo && [...$('#periodo').options].some((o) => o.value === m.periodo)) $('#periodo').value = m.periodo;
+  renderNomes();
+}
 
 function montarNomes(alvo) {
   const nomes = [];
@@ -228,6 +247,14 @@ async function buscar() {
         $('#progressoTexto').textContent = txt;
       },
     });
+    const { monitorados = {} } = await chrome.storage.local.get('monitorados');
+    const salvo = monitorados[a.doc];
+    if (salvo && (salvo.processos || []).length) {
+      const atuais = new Set(r.processos.map((p) => p.numero));
+      const guardados = salvo.processos.filter((p) => !atuais.has(p.numero)).length;
+      r.processos = Radar.juntarProcessos(salvo.processos, r.processos);
+      r.guardados = guardados;
+    }
     estado.resultado = { ...r, fontesUsadas: fontes, nomesBusca };
     estado.categoria = 'Todas';
     $('#soConfirmados').checked = false;
@@ -311,7 +338,8 @@ function renderResultado() {
     <div class="tile"><b>${ps.length}</b><span>processos encontrados</span></div>
     <div class="tile destaque"><b>${comoRe}</b><span>com ${quem} como ré</span></div>
     <div class="tile"><b>${confirmados}</b><span>confirmados pelo documento</span></div>
-    <div class="tile"><b>${recentes}</b><span>com atividade nos últimos 30 dias</span></div>`;
+    <div class="tile"><b>${recentes}</b><span>com atividade nos últimos 30 dias</span></div>
+    ${r.guardados ? `<p class="nota" style="grid-column:1/-1">Inclui ${r.guardados} processo(s) guardado(s) do monitoramento que não vieram nesta busca.</p>` : ''}`;
 
   const chips = ['Todas', ...ORDEM_CAT.filter((c) => cats[c])];
   $('#chips').innerHTML = chips
@@ -451,17 +479,21 @@ $('#btnMonitorar').addEventListener('click', async () => {
     doc: a.doc,
     tipo: a.tipo,
     nome: a.tipo === 'cnpj' ? (a.razao || Radar.formatarCnpj(a.doc)) : (estado.nomes.find((n) => n.grupo === 'extra') || {}).nome || `CPF ${Radar.formatarCpf(a.doc)}`,
-    nomesBusca: r.nomesBusca,
-    nomesAlvo: estado.nomes.filter((n) => n.grupo !== 'socio').map((n) => n.nome),
+    nomesBusca: [...new Set([...(ant.nomesBusca || []), ...(r.nomesBusca || [])])],
+    nomesAlvo: [...new Set([...(ant.nomesAlvo || []), ...estado.nomes.filter((n) => n.grupo !== 'socio').map((n) => n.nome)])],
     fontes: r.fontesUsadas,
+    processos: Radar.juntarProcessos(ant.processos, r.processos),
+    periodo: $('#periodo').value,
     vistos: [...new Set([...(ant.vistos || []), ...r.processos.map((p) => p.numero)])],
     pubsVistas: [...new Set([...(ant.pubsVistas || []), ...pubs])].slice(-5000),
     esajTotais: { ...(ant.esajTotais || {}), ...esajTotais },
     totalSancoes: Array.isArray(r.sancoes) ? r.sancoes.length : ant.totalSancoes,
-    totalProcessos: r.processos.length,
+    totalProcessos: 0,
     desde: ant.desde || new Date().toISOString(),
     ultimaVerificacao: new Date().toISOString(),
   };
+  const mm = monitorados[a.doc];
+  mm.totalProcessos = new Set([...mm.vistos, ...mm.processos.map((p) => p.numero)]).size;
   await chrome.storage.local.set({ monitorados });
   $('#btnMonitorar').textContent = 'Monitorando ✓';
   setTimeout(() => ($('#btnMonitorar').textContent = 'Monitorar este documento'), 2500);
@@ -483,7 +515,7 @@ async function renderMonitorados() {
     const doc = m.doc || m.cnpj;
     return `<div class="mon" data-doc="${esc(doc)}">
       <h3>${esc(m.nome || m.razao || Radar.formatarDoc(doc))}</h3>
-      <div class="proc-info">${m.tipo === 'cpf' ? 'CPF' : 'CNPJ'} ${Radar.formatarDoc(doc)} · ${m.totalProcessos || 0} processos conhecidos ·
+      <div class="proc-info">${m.tipo === 'cpf' ? 'CPF' : 'CNPJ'} ${Radar.formatarDoc(doc)} · ${Math.max(m.totalProcessos || 0, (m.processos || []).length, (m.vistos || []).length)} processos conhecidos ·
         última verificação ${m.ultimaVerificacao ? new Date(m.ultimaVerificacao).toLocaleString('pt-BR') : '—'}
         <br>Fontes: ${esc(nomeFontes(m.fontes || { djen: true }))}
         ${(m.nomesBusca || []).length ? `<br>Também pelo nome: ${m.nomesBusca.map(esc).join(', ')}` : ''}
@@ -504,6 +536,7 @@ async function renderMonitorados() {
       setTimeout(renderMonitorados, 3000);
     } else if (b.dataset.acao === 'abrir') {
       abrirAba('consultar');
+      estado.restaurar = doc;
       $('#doc').value = Radar.formatarDoc(doc);
       $('#formDoc').requestSubmit();
     } else if (b.dataset.acao === 'remover') {

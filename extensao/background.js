@@ -205,9 +205,11 @@ async function verificarTodos(somenteDoc) {
         alertas.unshift({ quando, doc, empresa: alvo, id: `${doc}-sancao-${Date.now()}`, tipo: 'sancao', numero: `${sancoesNovas} nova(s) sanção(ões)`, tribunal: 'CGU', classe: 'Portal da Transparência', categoria: 'Sanção', lido: false });
       }
 
+      m.processos = Radar.juntarProcessos(m.processos, processos);
+      m.processos.forEach((p) => vistos.add(p.numero));
       m.vistos = [...vistos];
       m.pubsVistas = [...pubsVistas].slice(-MAX_PUBS_VISTAS);
-      m.totalProcessos = vistos.size;
+      m.totalProcessos = Math.max(vistos.size, m.processos.length);
       m.ultimaVerificacao = quando;
       m.ultimoErro = avisos.join(' · ');
       resumo.push({ doc, novos: novos.length, novasPubs: novasPubs.length, avisos });

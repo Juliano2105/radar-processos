@@ -610,6 +610,34 @@
     return lista;
   }
 
+  /** Junta listas de processos (por número) sem nunca perder nenhum — usado para guardar o que foi monitorado. */
+  function juntarProcessos(antigos, novos) {
+    const mapa = new Map();
+    const uniq = (arr, chave) => { const v = new Map(); arr.forEach((x) => { const k = chave(x); if (!v.has(k)) v.set(k, x); }); return [...v.values()]; };
+    for (const p of [...(antigos || []), ...(novos || [])]) {
+      if (!p || !p.numero) continue;
+      const a = mapa.get(p.numero);
+      if (!a) { mapa.set(p.numero, { ...p, fontes: [...(p.fontes || [])], partes: [...(p.partes || [])], poloAlvo: [...(p.poloAlvo || [])], publicacoes: [...(p.publicacoes || [])], links: [...(p.links || [])] }); continue; }
+      for (const k of ['numeroMascara', 'tribunal', 'classe', 'assunto', 'orgao', 'segmento', 'instancia', 'categoria', 'valor']) if (!a[k] && p[k]) a[k] = p[k];
+      if (p.baixado) a.baixado = true;
+      if (p.confirmacao === 'documento') a.confirmacao = 'documento';
+      if (p.distribuicao && (!a.distribuicao || p.distribuicao < a.distribuicao)) a.distribuicao = p.distribuicao;
+      if (p.ultima && p.ultima > (a.ultima || '')) a.ultima = p.ultima;
+      a.fontes = [...new Set([...a.fontes, ...(p.fontes || [])])];
+      a.poloAlvo = [...new Set([...a.poloAlvo, ...(p.poloAlvo || [])])];
+      a.partes = uniq([...a.partes, ...(p.partes || [])], (x) => x.nome);
+      a.links = uniq([...a.links, ...(p.links || [])], (x) => x.url);
+      a.publicacoes = uniq([...(p.publicacoes || []), ...a.publicacoes], (x) => String(x.id));
+    }
+    const lista = [...mapa.values()].map((p) => {
+      p.publicacoes.sort((x, y) => String(y.data).localeCompare(String(x.data)));
+      p.publicacoes = p.publicacoes.slice(0, 30).map((x) => ({ ...x, texto: String(x.texto || '').slice(0, 4000) }));
+      return p;
+    });
+    lista.sort((x, y) => String(y.ultima || '').localeCompare(String(x.ultima || '')));
+    return lista;
+  }
+
   function poloTexto(polos) {
     if (!polos || !polos.length) return '';
     const m = { A: 'Autora', P: 'Ré', T: 'Terceira' };
@@ -620,6 +648,6 @@
     ESAJ, DJEN, sleep, soDigitos, formatarCnpj, formatarCpf, formatarDoc, formatarCnj, cnpjValido, cpfValido, tipoDoc,
     normalizar, semSufixo, textoLimpo, categoria, poloEsaj, poloTexto, buscarCnpj,
     parseEsajLista, parseEsajProcessoUnico, converterPdpj, lerJwt, tokenValido,
-    fonteDjen, fonteEsaj, fontePdpj, fonteTransparencia, buscarTudo, mesclar,
+    fonteDjen, fonteEsaj, fontePdpj, fonteTransparencia, buscarTudo, mesclar, juntarProcessos,
   };
 })(typeof self !== 'undefined' ? self : globalThis);
