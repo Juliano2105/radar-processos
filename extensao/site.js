@@ -130,6 +130,16 @@
     },
   };
 
+  /** Novidade achada no "Verificar agora": o servidor manda para o WhatsApp do próprio dono da sessão. */
+  function avisarWhatsapp(texto) {
+    if (!texto || !sessao) return;
+    fetchNativo(FUNCAO, {
+      method: 'POST',
+      headers: { apikey: CHAVE, Authorization: `Bearer ${CHAVE}`, 'Content-Type': 'application/json', 'x-region': 'sa-east-1' },
+      body: JSON.stringify({ acao: 'whatsapp_meu', sessao: sessao.sessao, texto }),
+    }).catch(() => {});
+  }
+
   let verificando = false;
   async function verificarAgora(somenteDoc) {
     if (verificando) return { ocupado: true };
@@ -146,6 +156,7 @@
         const r = await Monitor.verificarUm(m, cfg, null);
         novosAlertas.unshift(...r.alertas);
         resumo.push(r.resumo);
+        if (r.total && cfg.notificacoes !== false) avisarWhatsapp(Monitor.textoWhatsapp(r));
         await rpcS('rp_site_salvar_monitorado', { p_doc: doc, p_dados: Monitor.compactar(m) });
         dados.monitorados[doc] = m;
       }

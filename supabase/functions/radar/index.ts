@@ -5,15 +5,47 @@
 //  - proxy: o site pede uma página de fonte pública (DJEN, e-SAJ, Transparência). Exige sessão válida.
 //  - cron:  chamado pelo agendamento do banco de hora em hora. Verifica os monitorados vencidos,
 //           grava os alertas de cada dono e avisa no WhatsApp (Evolution API, se configurada).
+//  - whatsapp_meu: o site manda o aviso de um "Verificar agora" para o WhatsApp do PRÓPRIO dono da sessão.
 //
-// Ao publicar, copie extensao/lib.js e extensao/monitor.js para junto deste arquivo.
+// O núcleo (extensao/lib.js e extensao/monitor.js) vem embutido na publicação como reserva e,
+// a cada 10 minutos, é recarregado do GitHub (branch main): mudou no GitHub, o servidor acompanha sozinho.
+// Ao publicar, os imports abaixo apontam para o jsDelivr no commit atual.
 import './lib.js';
 import './monitor.js';
 
 // deno-lint-ignore no-explicit-any
 const G = globalThis as any;
-const Radar = G.Radar;
-const Monitor = G.Monitor;
+const NUCLEO_URL = 'https://raw.githubusercontent.com/Juliano2105/radar-processos/main/extensao/';
+const nucleo = { versao: 'embutido', checado: 0 };
+
+/** Recarrega lib.js e monitor.js do GitHub se mudaram. Se algo falhar, continua com o que já está carregado. */
+async function atualizarNucleo() {
+  if (Date.now() - nucleo.checado < 10 * 60e3) return;
+  nucleo.checado = Date.now();
+  try {
+    const [lib, mon] = await Promise.all(['lib.js', 'monitor.js'].map(async (f) => {
+      const r = await fetchNativo(`${NUCLEO_URL}${f}?t=${Date.now()}`, { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error(`${f} HTTP ${r.status}`);
+      return r.text();
+    }));
+    if (lib.length < 5000 || mon.length < 2000) throw new Error('arquivo incompleto');
+    const versao = (await sha256(lib + mon)).slice(0, 12);
+    if (versao === nucleo.versao) return;
+    const antes = { Radar: G.Radar, Monitor: G.Monitor };
+    try {
+      (0, eval)(lib);
+      (0, eval)(mon);
+      if (typeof G.Radar?.mesclar !== 'function' || typeof G.Monitor?.verificarUm !== 'function') throw new Error('núcleo inválido');
+      nucleo.versao = versao;
+    } catch (e) {
+      G.Radar = antes.Radar;
+      G.Monitor = antes.Monitor;
+      throw e;
+    }
+  } catch (e) {
+    console.warn('Radar: núcleo do GitHub não carregou, seguindo com o atual:', (e as Error).message);
+  }
+}
 
 const SB = Deno.env.get('SUPABASE_URL')!;
 const SR = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -55,7 +87,7 @@ async function donoDaSessao(sessao: unknown): Promise<string> {
   if (c && c.ate > Date.now()) return c.id;
   const id = await sb('rpc/rp_sessao_id', { method: 'POST', body: JSON.stringify({ p_sessao: sessao }) });
   if (!id) throw new Error('Sessão expirada. Entre de novo.');
-  sessoes.set(sessao, { id, ate: Date.now() + 5 * 60e3 });
+  sessoes.set(sessao, { id, ate: Date.now() + 60e3 });
   if (sessoes.size > 5000) sessoes.clear();
   return id;
 }
@@ -162,10 +194,10 @@ async function proxy(corpo: any) {
 }
 
 /* ---------- ação: cron ---------- */
-const CONFIG_PADRAO = {
+const configPadrao = () => ({
   intervaloHoras: 6, notificacoes: true, avisarPublicacoes: true, chaveTransparencia: '',
-  fontesPadrao: { djen: true, pdpj: false, esaj: Object.keys(Radar.ESAJ), transparencia: false },
-};
+  fontesPadrao: { djen: true, pdpj: false, esaj: Object.keys(G.Radar.ESAJ), transparencia: false },
+});
 
 async function whatsapp(telefone: string, texto: string) {
   const [url, chave, instancia] = await Promise.all([config('evo_url'), config('evo_chave'), config('evo_instancia')]);
@@ -184,6 +216,9 @@ async function whatsapp(telefone: string, texto: string) {
 async function cron(corpo: any) {
   const hash = await config('cron_segredo_hash');
   if (!hash || typeof corpo.segredo !== 'string' || (await sha256(corpo.segredo)) !== hash) return json({ erro: 'não autorizado' }, 401);
+  await atualizarNucleo();
+  const Monitor = G.Monitor;
+  const CONFIG_PADRAO = configPadrao();
   const inicio = Date.now();
   const agora = new Date().toISOString();
   const fila = await sb(
@@ -230,7 +265,27 @@ async function cron(corpo: any) {
       G.fetch = fetchNativo;
     }
   }
-  return json({ ok: true, verificados: feitos.length, pendentes: (fila || []).length - feitos.length, feitos, regiao: Deno.env.get('SB_REGION') || '' });
+  return json({ ok: true, verificados: feitos.length, pendentes: (fila || []).length - feitos.length, feitos, regiao: Deno.env.get('SB_REGION') || '', nucleo: nucleo.versao });
+}
+
+/* ---------- ação: whatsapp_meu ---------- */
+const envios = new Map<string, number[]>();
+// deno-lint-ignore no-explicit-any
+async function whatsappMeu(corpo: any) {
+  const id = await donoDaSessao(corpo.sessao);
+  const texto = typeof corpo.texto === 'string' ? corpo.texto.slice(0, 3500).trim() : '';
+  if (!texto) return json({ erro: 'Mensagem vazia.' }, 400);
+  const agora = Date.now();
+  const recentes = (envios.get(id) || []).filter((t) => agora - t < 3600e3);
+  if (recentes.length >= 10) return json({ erro: 'Muitos avisos nesta hora.' }, 429);
+  const r = await sb(`rp_cadastros?id=eq.${id}&select=telefone,config`);
+  const dono = r && r[0];
+  if (!dono || !dono.telefone) return json({ erro: 'Cadastro não encontrado.' }, 404);
+  if (dono.config && dono.config.notificacoes === false) return json({ ok: true, enviado: false, motivo: 'desligado' });
+  recentes.push(agora);
+  envios.set(id, recentes);
+  const enviado = await whatsapp(dono.telefone, texto);
+  return json({ ok: true, enviado });
 }
 
 Deno.serve(async (req) => {
@@ -242,6 +297,7 @@ Deno.serve(async (req) => {
   try {
     if (corpo.acao === 'proxy') return await proxy(corpo);
     if (corpo.acao === 'cron') return await cron(corpo);
+    if (corpo.acao === 'whatsapp_meu') return await whatsappMeu(corpo);
     return json({ erro: 'ação desconhecida' }, 400);
   } catch (e) {
     const msg = (e as Error).message || String(e);

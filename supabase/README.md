@@ -18,3 +18,5 @@ Bloqueio de 15 minutos após 10 senhas erradas. Nenhum processo, CPF ou CNPJ con
 2. Publique a função `functions/radar/index.ts` com o nome `radar`, **sem** verificação de JWT (ela faz a própria checagem de sessão e do segredo do cron). Ao publicar, os `import` de `lib.js` e `monitor.js` apontam para o jsDelivr no commit atual.
 3. Sempre chame a função com o cabeçalho `x-region: sa-east-1` (ou `?forceFunctionRegion=sa-east-1`): o DJEN só responde a IP do Brasil.
 4. WhatsApp: grave em `rp_config` as chaves `evo_url`, `evo_chave` e `evo_instancia` da sua Evolution API.
+5. Depois de `radar-site-config.sql`, rode `radar-site-ajustes.sql`.
+6. O servidor recarrega `lib.js` e `monitor.js` do GitHub (branch main) a cada 10 minutos; só é preciso republicar a função quando mudar o próprio `functions/radar/index.ts`.

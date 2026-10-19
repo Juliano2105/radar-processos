@@ -53,7 +53,7 @@ revoke all on public.rp_sessoes, public.rp_login_tentativas, public.rp_monitorad
 
 -- ---------- utilidades internas (não expostas) ----------
 create or replace function public.rp_tel(p text)
-returns text language sql immutable as $$
+returns text language sql immutable set search_path = public as $$
   select case when length(d) in (10, 11) then '55' || d else d end
   from (select regexp_replace(coalesce(p, ''), '\D', '', 'g') as d) x
 $$;
@@ -90,6 +90,10 @@ begin
   if char_length(v_nome) < 3 then raise exception 'Informe seu nome.'; end if;
   if v_tel !~ '^55[0-9]{10,11}$' then raise exception 'Informe o telefone com DDD.'; end if;
   if char_length(coalesce(p_senha, '')) < 6 then raise exception 'A senha precisa ter pelo menos 6 caracteres.'; end if;
+  -- trava contra cadastros em massa (robôs)
+  if (select count(*) from rp_cadastros where criado_em > now() - interval '10 minutes') >= 20 then
+    raise exception 'Muitos cadastros agora. Tente de novo em alguns minutos.';
+  end if;
   select id, senha_hash into v_id, v_hash from rp_cadastros where telefone = v_tel;
   if v_id is not null and v_hash is not null then
     raise exception 'Este telefone já tem cadastro. Use "Já tenho cadastro" para entrar.';
