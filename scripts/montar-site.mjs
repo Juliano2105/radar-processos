@@ -22,4 +22,5 @@ writeFileSync(`${SAIDA}/app/index.html`, html);
 rmSync(`${SAIDA}/app/app.html`);
 if (!existsSync(`${SAIDA}/index.html`)) throw new Error('docs/index.html não existe');
 writeFileSync(`${SAIDA}/.nojekyll`, '');
+writeFileSync(`${SAIDA}/CNAME`, 'radar.pdvmaster.com\n');
 console.log(`✓ Site montado em ${SAIDA}/ (app ${versao})`);

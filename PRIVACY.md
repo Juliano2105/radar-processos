@@ -2,7 +2,7 @@
 
 _Última atualização: 17 de outubro de 2026_
 
-O **Radar de Processos** é uma extensão do Chrome e um site (juliano2105.github.io/radar-processos/app) que consultam, em fontes públicas, processos judiciais e sanções ligados a um CNPJ ou CPF digitado por você, e podem monitorar esses documentos e avisar quando surgir algo novo.
+O **Radar de Processos** é uma extensão do Chrome e um site (radar.pdvmaster.com/app) que consultam, em fontes públicas, processos judiciais e sanções ligados a um CNPJ ou CPF digitado por você, e podem monitorar esses documentos e avisar quando surgir algo novo.
 
 ## Resumo
 
