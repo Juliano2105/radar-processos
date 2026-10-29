@@ -232,10 +232,12 @@ async function cron(corpo: any) {
     const horas = Math.max(1, Math.min(48, Number(cfg.intervaloHoras) || 6));
     const m = { ...(item.dados || {}), doc: item.doc };
     m.fontes = { ...(m.fontes || CONFIG_PADRAO.fontesPadrao), pdpj: false };
-    // marca já a próxima, para outra rodada não pegar o mesmo item
+    // marca já a próxima, para outra rodada não pegar o mesmo item.
+    // Conta a partir do início da rodada e com 10 min de folga: senão a rodada de daqui a N horas,
+    // que começa no mesmo minuto, chega segundos antes e o item fica para a hora seguinte.
     await sb(`rp_monitorados?id=eq.${item.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ proxima_verificacao: new Date(Date.now() + horas * 3600e3).toISOString() }),
+      body: JSON.stringify({ proxima_verificacao: new Date(inicio + horas * 3600e3 - 10 * 60e3).toISOString() }),
     });
     const jar: Jar = new Map();
     G.fetch = fetchDoServidor(jar);
